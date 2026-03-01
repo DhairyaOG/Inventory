@@ -1,0 +1,26 @@
+# virtual environments
+.venv/
+venv/
+env/
+.env
+
+# node
+node_modules/
+.npm
+package-lock.json
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store

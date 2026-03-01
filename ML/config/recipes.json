@@ -1,0 +1,22 @@
+[
+  {
+    "item_name": "Burger",
+    "ingredients": [
+      {"name": "Bun", "qty": 2},
+      {"name": "Patty", "qty": 1},
+      {"name": "Tomato", "qty": 50},
+      {"name": "Onion", "qty": 50}
+    ],
+    "mrp": 50 
+  },
+  {
+    "item_name": "Pizza",
+    "ingredients": [
+      {"name": "Dough Ball", "qty": 1},
+      {"name": "Cheese", "qty": 150},
+      {"name": "Tomato Sauce", "qty": 100},
+      {"name": "Pepperoni", "qty": 50}
+    ],
+    "mrp": 150 
+  }
+]
