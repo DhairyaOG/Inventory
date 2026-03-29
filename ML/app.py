@@ -14,6 +14,13 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from functools import wraps
 
+allowed_origins = [
+    "http://localhost:5173", 
+    "https://pantri.pro", 
+    "https://www.pantri.pro"
+]
+
+CORS(app, resources={r"/*": {"origins": allowed_origins}})
 # ─────────────────────────────────────────────
 # 0. LOGGING SETUP
 # ─────────────────────────────────────────────

@@ -4,6 +4,18 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 
 // Load environment variables
+const cors = require('cors');
+
+const corsOptions = {
+  origin: [
+    'https://pantri.co.in',    
+    'https://www.pantri.co.in'
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 dotenv.config();
 
 // Connect to Database
