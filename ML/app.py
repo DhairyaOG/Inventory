@@ -16,9 +16,9 @@ CORS(app)
 # 1. CONFIGURATION
 username = quote_plus("aroradhairya314")
 password = quote_plus("@123#")
-MONGO_URI = f"mongodb+srv://{username}:{password}@items.xws9ags.mongodb.net/?appName=Items"
+MONGO_URL = f"mongodb+srv://{username}:{password}@items.xws9ags.mongodb.net/?appName=Items"
 
-client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+client = MongoClient(MONGO_URL, tlsCAFile=certifi.where())
 db = client['restaurant_db']
 
 MODEL_PATH = 'multi_item_model.pkl'
