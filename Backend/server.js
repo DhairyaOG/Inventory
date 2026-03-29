@@ -3,9 +3,16 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
-// Load environment variables
-const cors = require('cors');
+// 1. Load environment variables first
+dotenv.config();
 
+// 2. Initialize the Express app
+const app = express();
+
+// 3. Connect to Database
+connectDB();
+
+// 4. Configure and apply CORS
 const corsOptions = {
   origin: [
     'https://pantri.co.in',    
@@ -14,20 +21,12 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200
 };
+app.use(cors(corsOptions)); 
 
-app.use(cors(corsOptions));
-dotenv.config();
-
-// Connect to Database
-connectDB();
-
-const app = express();
-
-// Middleware
-app.use(cors()); // Allow frontend to talk to backend
+// 5. Other Middleware
 app.use(express.json()); // Parse JSON bodies
 
-// Routes
+// 6. Routes
 app.use('/api', require('./routes/api'));
 
 // Root endpoint
