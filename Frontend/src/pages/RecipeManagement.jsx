@@ -6,7 +6,7 @@ import {
   deleteRecipe 
 } from '../services/api';
 
-const RecipeManagement = ({ inventoryData = [] }) => {
+const RecipeManagement = ({ inventoryData = [], onRecipeUpdate }) => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   
@@ -18,7 +18,7 @@ const RecipeManagement = ({ inventoryData = [] }) => {
   const [category, setCategory] = useState('Main');
   const [price, setPrice] = useState('');
   const [ingredients, setIngredients] = useState([]);
-  const [targetMargin, setTargetMargin] = useState(60); // Default to 60% standard restaurant margin
+  const [targetMargin, setTargetMargin] = useState(60);
 
   // Calculated Values
   const [makingCost, setMakingCost] = useState(0);
@@ -42,8 +42,7 @@ const RecipeManagement = ({ inventoryData = [] }) => {
     });
     setMakingCost(totalCost);
     
-    // Suggested Price = Cost / (1 - Margin%)
-    if (targetMargin >= 100) setTargetMargin(99); // Prevent division by zero
+    if (targetMargin >= 100) setTargetMargin(99);
     const marginDec = targetMargin / 100;
     const suggested = totalCost > 0 ? (totalCost / (1 - marginDec)) : 0;
     setSuggestedPrice(suggested);
@@ -69,6 +68,8 @@ const RecipeManagement = ({ inventoryData = [] }) => {
     if (window.confirm("Are you sure you want to delete this recipe?")) {
       await deleteRecipe(id);
       loadRecipes();
+      // ✅ FIX: Notify App.jsx to refresh its recipes state too
+      if (onRecipeUpdate) onRecipeUpdate();
     }
   };
 
@@ -105,6 +106,8 @@ const RecipeManagement = ({ inventoryData = [] }) => {
 
     resetForm();
     loadRecipes();
+    // ✅ FIX: After saving, tell App.jsx to re-fetch recipes so MRP stays in sync
+    if (onRecipeUpdate) onRecipeUpdate();
   };
 
   const resetForm = () => {
@@ -115,7 +118,6 @@ const RecipeManagement = ({ inventoryData = [] }) => {
     setPrice('');
     setIngredients([]);
   };
-
 
   return (
     <div className="p-8 max-w-6xl mx-auto">

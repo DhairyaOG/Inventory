@@ -3,21 +3,19 @@ const router = express.Router();
 const Inventory = require('../models/Inventory');
 const Recipe = require('../models/Recipe');
 const Sale = require('../models/Sale');
-const axios = require('axios'); // Needed to talk to Python AI
+const axios = require('axios');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
 
-// --- INVENTORY ROUTES ---
-
-// GET /api/inventory
-router.get('/inventory', async (req, res) => {
-  try {
-    const items = await Inventory.find();
-    res.json(items);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+const razorpay = new Razorpay({
+  key_id:     process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// POST /api/inventory (To manually update stock)
+// INVENTORY
+router.get('/inventory', async (req, res) => {
+  try { res.json(await Inventory.find()); } catch (err) { res.status(500).json({ message: err.message }); }
+});
 router.post('/inventory', async (req, res) => {
   const { name, stock, lead_time, unit_price, expiry_days } = req.body;
   try {
@@ -33,247 +31,163 @@ router.post('/inventory', async (req, res) => {
       await item.save();
     }
     res.json(item);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  } catch (err) { res.status(500).json({ message: err.message }); }
 });
-
-// PUT /api/inventory/:id
 router.put('/inventory/:id', async (req, res) => {
   try {
-    const updatedIngredient = await Inventory.findByIdAndUpdate(
-      req.params.id, 
-      req.body, 
-      { new: true, runValidators: true }
-    );
-    if (!updatedIngredient) return res.status(404).json({ message: "Ingredient not found" });
-    res.json(updatedIngredient);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
+    const updated = await Inventory.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!updated) return res.status(404).json({ message: "Ingredient not found" });
+    res.json(updated);
+  } catch (err) { res.status(400).json({ message: err.message }); }
 });
-
-// DELETE /api/inventory/:id
 router.delete('/inventory/:id', async (req, res) => {
   try {
-    const deletedIngredient = await Inventory.findByIdAndDelete(req.params.id);
-    if (!deletedIngredient) return res.status(404).json({ message: "Ingredient not found" });
-    res.json({ message: "Ingredient deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    const deleted = await Inventory.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Ingredient not found" });
+    res.json({ message: "Deleted successfully" });
+  } catch (err) { res.status(500).json({ message: err.message }); }
 });
-
-// POST /api/inventory/order (To receive an order & increment stock)
 router.post('/inventory/order', async (req, res) => {
-  const { orders } = req.body; // Expecting { orders: [{ name: "Bun", qty: 50 }, ...] }
-  
-  if (!Array.isArray(orders)) {
-    return res.status(400).json({ message: "Orders must be an array" });
-  }
-
+  const { orders } = req.body;
+  if (!Array.isArray(orders)) return res.status(400).json({ message: "Orders must be an array" });
   try {
-    const bulkOps = orders.map(order => ({
-      updateOne: {
-        filter: { name: order.name },
-        update: { $inc: { stock: order.qty } }
-      }
-    }));
-
-    if (bulkOps.length > 0) {
-      await Inventory.bulkWrite(bulkOps);
-    }
-    
-    res.json({ message: "Stock updated successfully based on orders", count: orders.length });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    const bulkOps = orders.map(order => ({ updateOne: { filter: { name: order.name }, update: { $inc: { stock: order.qty } } } }));
+    if (bulkOps.length > 0) await Inventory.bulkWrite(bulkOps);
+    res.json({ message: "Stock updated", count: orders.length });
+  } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// --- RECIPE ROUTES ---
-
-// GET /api/recipes
+// RECIPES
 router.get('/recipes', async (req, res) => {
-  try {
-    const recipes = await Recipe.find();
-    res.json(recipes);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  try { res.json(await Recipe.find()); } catch (err) { res.status(500).json({ message: err.message }); }
 });
-
-// POST /api/recipes
 router.post('/recipes', async (req, res) => {
-  try {
-    const recipe = new Recipe(req.body);
-    await recipe.save();
-    res.status(201).json(recipe);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
+  try { const r = new Recipe(req.body); await r.save(); res.status(201).json(r); } catch (err) { res.status(400).json({ message: err.message }); }
 });
-
-// PUT /api/recipes/:id
 router.put('/recipes/:id', async (req, res) => {
   try {
-    const updatedRecipe = await Recipe.findByIdAndUpdate(
-      req.params.id, 
-      req.body, 
-      { new: true, runValidators: true }
-    );
-    if (!updatedRecipe) return res.status(404).json({ message: "Recipe not found" });
-    res.json(updatedRecipe);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
+    const updated = await Recipe.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!updated) return res.status(404).json({ message: "Recipe not found" });
+    res.json(updated);
+  } catch (err) { res.status(400).json({ message: err.message }); }
 });
-
-// DELETE /api/recipes/:id
 router.delete('/recipes/:id', async (req, res) => {
   try {
-    const deletedRecipe = await Recipe.findByIdAndDelete(req.params.id);
-    if (!deletedRecipe) return res.status(404).json({ message: "Recipe not found" });
-    res.json({ message: "Recipe deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    const deleted = await Recipe.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Recipe not found" });
+    res.json({ message: "Deleted" });
+  } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// --- SALES ROUTES ---
-
-// POST /api/sales (Punching Sales)
+// SALES — FIX: accepts single object OR array
 router.post('/sales', async (req, res) => {
-  const salesData = req.body; // Expecting array: [{item_name: "Burger", qty: 5}]
-  
-  if (!Array.isArray(salesData)) {
-    return res.status(400).json({ message: "Data must be an array" });
-  }
-
   try {
-    const newSales = salesData
-      .filter(item => item.qty > 0)
+    const rawData = Array.isArray(req.body) ? req.body : [req.body];
+    const newSales = rawData
+      .filter(item => item.item_name && item.qty_sold > 0)
       .map(item => ({
         item_name: item.item_name,
-        qty_sold: item.qty,
-        date: new Date()
+        qty_sold:  Number(item.qty_sold),
+        revenue:   item.revenue || 0,
+        date:      item.date ? new Date(item.date) : new Date(),
       }));
-
-    if (newSales.length > 0) {
-      await Sale.insertMany(newSales);
-      
-      // OPTIONAL: Update Inventory immediately based on recipe?
-      // Yes, updating inventory immediately as part of the POS flow.
-      const recipes = await Recipe.find({ item_name: { $in: newSales.map(s => s.item_name) } });
-      const inventoryItems = await Inventory.find();
-
-      const bulkOps = [];
-      
-      newSales.forEach(sale => {
-        const recipe = recipes.find(r => r.item_name === sale.item_name);
-        if (recipe && recipe.ingredients) {
-          recipe.ingredients.forEach(ing => {
-            const totalQtyNeeded = ing.qty * sale.qty_sold;
-            // Subtract from inventory
-            bulkOps.push({
-              updateOne: {
-                filter: { name: ing.name },
-                update: { $inc: { stock: -totalQtyNeeded } }
-              }
-            });
-          });
-        }
-      });
-
-      if (bulkOps.length > 0) {
-        await Inventory.bulkWrite(bulkOps);
+    if (newSales.length === 0) return res.status(400).json({ message: "No valid sales data" });
+    await Sale.insertMany(newSales);
+    const recipes = await Recipe.find({ item_name: { $in: newSales.map(s => s.item_name) } });
+    const bulkOps = [];
+    newSales.forEach(sale => {
+      const recipe = recipes.find(r => r.item_name === sale.item_name);
+      if (recipe?.ingredients) {
+        recipe.ingredients.forEach(ing => {
+          bulkOps.push({ updateOne: { filter: { name: ing.name }, update: { $inc: { stock: -(ing.qty * sale.qty_sold) } } } });
+        });
       }
-    }
-    
-    res.json({ message: "Sales recorded successfully", count: newSales.length });
+    });
+    if (bulkOps.length > 0) await Inventory.bulkWrite(bulkOps);
+    res.json({ message: "Sales recorded", count: newSales.length });
   } catch (err) {
+    console.error("Sales error:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// --- AI PREDICTION PROXY ---
-// The React app calls Node, Node calls Python.
-router.get('/predict-orders', async (req, res) => {
-  try {
-    // Assuming Python is running on port 3900
-    const pythonResponse = await axios.get('http://localhost:3900/predict-orders');
-    res.json(pythonResponse.data);
-  } catch (err) {
-    console.error("AI Service Error:", err.message);
-    res.status(503).json({ 
-      message: "AI Brain is offline. Ensure Python service is running on port 3900." 
-    });
-  }
-});
-// GET /api/sales/history (Smart Financials)
 router.get('/sales/history', async (req, res) => {
   try {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    // 1. Fetch EVERYTHING needed for the math
-    const sales = await Sale.find({ date: { $gte: thirtyDaysAgo } });
-    const recipes = await Recipe.find();
-    const inventory = await Inventory.find(); // <--- Needed for prices
-
-    // 2. Build an Inventory Price Map (Fast Lookup)
-    // { "Tomato": 0.005, "Bun": 0.50, ... }
+    const [sales, recipes, inventory] = await Promise.all([Sale.find({ date: { $gte: thirtyDaysAgo } }), Recipe.find(), Inventory.find()]);
     const ingredientPrices = {};
-    inventory.forEach(item => {
-      ingredientPrices[item.name] = item.unit_price || 0;
-    });
-
-    // 3. Calculate Dynamic Cost for every Recipe
+    inventory.forEach(item => { ingredientPrices[item.name] = item.unit_price || 0; });
     const recipeFinancials = {};
     recipes.forEach(r => {
       let makingCost = 0;
-      
-      // Sum up the cost of ingredients
-      if (r.ingredients && Array.isArray(r.ingredients)) {
-        r.ingredients.forEach(ing => {
-          const price = ingredientPrices[ing.name] || 0;
-          makingCost += (ing.qty * price);
-        });
-      }
-
-      recipeFinancials[r.item_name] = { 
-        price: r.price || 0, 
-        cost: makingCost // <--- The calculated cost
-      };
+      if (r.ingredients) r.ingredients.forEach(ing => { makingCost += (ing.qty * (ingredientPrices[ing.name] || 0)); });
+      recipeFinancials[r.item_name] = { price: r.price || 0, cost: makingCost };
     });
-
-    // 4. Generate Daily Stats
     const dailyStats = {};
-
     sales.forEach(sale => {
       const dateKey = sale.date.toISOString().split('T')[0];
-      
-      if (!dailyStats[dateKey]) {
-        dailyStats[dateKey] = { date: dateKey, revenue: 0, profit: 0, units: 0 };
-      }
-
+      if (!dailyStats[dateKey]) dailyStats[dateKey] = { date: dateKey, revenue: 0, profit: 0, units: 0 };
       const info = recipeFinancials[sale.item_name];
       if (info) {
         const rev = sale.qty_sold * info.price;
-        const cost = sale.qty_sold * info.cost; // Now this is accurate!
-        
         dailyStats[dateKey].revenue += rev;
-        dailyStats[dateKey].profit += (rev - cost);
+        dailyStats[dateKey].profit += (rev - sale.qty_sold * info.cost);
         dailyStats[dateKey].units += sale.qty_sold;
       }
     });
+    res.json(Object.values(dailyStats).sort((a, b) => new Date(a.date) - new Date(b.date)));
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
 
-    // 5. Sort and Send
-    const result = Object.values(dailyStats).sort((a, b) => 
-      new Date(a.date) - new Date(b.date)
-    );
-
-    res.json(result);
+// RAZORPAY — Create Order
+router.post('/payments/create-order', async (req, res) => {
+  const { amount, currency = 'INR', receipt } = req.body;
+  if (!amount) return res.status(400).json({ message: "Amount required" });
+  try {
+    const order = await razorpay.orders.create({ amount: Math.round(amount * 100), currency, receipt: receipt || `receipt_${Date.now()}` });
+    res.json({ order_id: order.id, currency: order.currency, amount: order.amount, key_id: process.env.RAZORPAY_KEY_ID });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Razorpay error:", err);
+    res.status(500).json({ message: "Failed to create payment order" });
   }
-});module.exports = router;
+});
+
+// RAZORPAY — Verify + Save Order
+router.post('/payments/verify', async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderData } = req.body;
+  const expected = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`).digest('hex');
+  if (expected !== razorpay_signature) return res.status(400).json({ success: false, message: "Payment verification failed" });
+  try {
+    if (orderData?.items?.length > 0) {
+      const salesToInsert = orderData.items.map(item => ({ item_name: item.item_name, qty_sold: item.qty, revenue: item.total, date: new Date() }));
+      await Sale.insertMany(salesToInsert);
+      const recipes = await Recipe.find({ item_name: { $in: salesToInsert.map(s => s.item_name) } });
+      const bulkOps = [];
+      salesToInsert.forEach(sale => {
+        const recipe = recipes.find(r => r.item_name === sale.item_name);
+        if (recipe?.ingredients) {
+          recipe.ingredients.forEach(ing => { bulkOps.push({ updateOne: { filter: { name: ing.name }, update: { $inc: { stock: -(ing.qty * sale.qty_sold) } } } }); });
+        }
+      });
+      if (bulkOps.length > 0) await Inventory.bulkWrite(bulkOps);
+    }
+    res.json({ success: true, payment_id: razorpay_payment_id, message: "Payment verified and order saved" });
+  } catch (err) {
+    console.error("Post-payment save error:", err);
+    res.status(500).json({ success: false, message: "Payment verified but save failed" });
+  }
+});
+
+// AI PROXY
+router.get('/predict-orders', async (req, res) => {
+  try {
+    const r = await axios.get('http://localhost:3900/predict-orders');
+    res.json(r.data);
+  } catch (err) {
+    res.status(503).json({ message: "AI Brain offline. Run Python service on port 3900." });
+  }
+});
+
+module.exports = router;

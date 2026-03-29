@@ -8,7 +8,8 @@ import {
   ChefHat, 
   Tag, 
   LogOut, 
-  Bell 
+  Bell,
+  CreditCard  // ✅ NEW: POS icon
 } from 'lucide-react';
 import logoFull from '../assets/pantri-logo-full.png';
 
@@ -39,7 +40,6 @@ const Layout = ({ children, setIsLoggedIn }) => {
         
         {/* Logo Area */}
         <div className="p-8 flex justify-center mb-2">
-           {/* If logo is missing, show text */}
            <img 
              src={logoFull} 
              alt="Pantri" 
@@ -54,6 +54,8 @@ const Layout = ({ children, setIsLoggedIn }) => {
           <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" />
           
           <div className="pt-6 pb-2 px-4 text-xs font-bold text-sage uppercase tracking-wider">Operations</div>
+          {/* ✅ NEW: POS link added under Operations */}
+          <SidebarItem to="/pos" icon={CreditCard} label="Take Order (POS)" />
           <SidebarItem to="/sales-entry" icon={ShoppingCart} label="Punch Sales" />
           <SidebarItem to="/inventory" icon={Package} label="Current Inventory" />
           
