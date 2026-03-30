@@ -14,13 +14,6 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from functools import wraps
 
-allowed_origins = [
-    "http://localhost:5173", 
-    "https://pantri.pro", 
-    "https://www.pantri.pro"
-]
-
-CORS(app, resources={r"/*": {"origins": allowed_origins}})
 # ─────────────────────────────────────────────
 # 0. LOGGING SETUP
 # ─────────────────────────────────────────────
@@ -55,7 +48,18 @@ MONGO_URL = (
 # 2. FLASK APP SETUP
 # ─────────────────────────────────────────────
 app = Flask(__name__)
-CORS(app, origins=[ALLOWED_ORIGIN])  # Restrict CORS to your frontend only
+
+# ✅ FIXED: CORS configuration with multiple allowed origins
+allowed_origins = [
+    "http://localhost:5173",      # Local development
+    "https://pantri.co.in",        # Production domain
+    "https://www.pantri.co.in",    # Production with www
+]
+CORS(app, resources={r"/*": {
+    "origins": allowed_origins,
+    "methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type", "X-API-Key"]
+}})
 
 # ─────────────────────────────────────────────
 # 3. DATABASE CONNECTION (with error handling)
@@ -159,6 +163,20 @@ def build_day_features(future_date, model):
 # ─────────────────────────────────────────────
 # 8. ROUTES
 # ─────────────────────────────────────────────
+
+@app.route("/", methods=["GET"])
+def home():
+    """Root endpoint."""
+    return jsonify({
+        "service": "Pantri ML API",
+        "status": "running",
+        "version": "1.0",
+        "endpoints": {
+            "health": "/health",
+            "train": "/train (POST, requires X-API-Key header)",
+            "predict": "/predict-orders (GET)"
+        }
+    })
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -308,6 +326,6 @@ def server_error(e):
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
     port  = int(os.environ.get("PORT", 3900))
-    debug = os.environ.get("DEBUG", "false").lower() == "true"  # FIX: debug=False in production
+    debug = os.environ.get("DEBUG", "false").lower() == "true"
     logger.info(f"🚀 Starting server on port {port} | debug={debug}")
     app.run(host="0.0.0.0", port=port, debug=debug)

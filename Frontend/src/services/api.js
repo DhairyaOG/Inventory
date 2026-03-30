@@ -2,6 +2,7 @@ import axios from 'axios';
  
 const API_URL = import.meta.env.VITE_API_URL 
 const ML_API_URL = import.meta.env.VITE_ML_API_URL 
+
 // INVENTORY
 export const fetchInventoryData   = async () => { try { return (await axios.get(`${API_URL}/inventory`)).data; } catch { return []; } };
 export const createInventoryItem  = async (d) => (await axios.post(`${API_URL}/inventory`, d)).data;
@@ -19,9 +20,26 @@ export const deleteRecipe    = async (id) => (await axios.delete(`${API_URL}/rec
 export const submitSalesData  = async (payload) => (await axios.post(`${API_URL}/sales`, payload)).data;
 export const fetchSalesHistory = async () => { try { return (await axios.get(`${API_URL}/sales/history`)).data; } catch { return []; } };
 
-// AI
-export const fetchInventoryPrediction = async () => { try { return (await axios.get(`${API_URL}/predict-orders`)).data; } catch { return { shopping_list: [] }; } };
-export const triggerTraining          = async () => (await axios.post('http://localhost:3900/train')).data;
+// AI - ✅ FIXED: Now uses ML_API_URL instead of hardcoded localhost
+export const fetchInventoryPrediction = async () => { 
+  try { 
+    return (await axios.get(`${ML_API_URL}/predict-orders`)).data; 
+  } catch (err) { 
+    console.error('Prediction error:', err);
+    return { shopping_list: [] }; 
+  } 
+};
+
+export const triggerTraining = async (apiKey) => {
+  try {
+    return (await axios.post(`${ML_API_URL}/train`, {}, {
+      headers: { 'X-API-Key': apiKey }
+    })).data;
+  } catch (err) {
+    console.error('Training error:', err);
+    throw err;
+  }
+};
 
 // RAZORPAY
 export const createPaymentOrder = async (amount) =>
