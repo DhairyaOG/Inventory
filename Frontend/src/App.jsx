@@ -8,12 +8,14 @@ import RecipeManagement from './pages/RecipeManagement';
 import OrderManagement from './pages/OrderManagement';
 import Dashboard from './pages/Dashboard';
 import InventoryManagement from './pages/InventoryManagement';
-import POS from './pages/POS'; // ✅ NEW
+import POS from './pages/POS';
 import { 
   fetchInventoryData, 
   fetchRecipeData, 
   fetchInventoryPrediction,
-  fetchSalesHistory 
+  fetchSalesHistory,
+  isAuthenticated,
+  getUserRole
 } from './services/api';
 
 const calculateRecipeCost = (recipe, inventoryList) => {
@@ -27,7 +29,8 @@ const calculateRecipeCost = (recipe, inventoryList) => {
 };
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(isAuthenticated());
+  const [userRole, setUserRole] = useState(getUserRole());
   const [inventory, setInventory] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [aiPredictions, setAiPredictions] = useState([]);
@@ -42,15 +45,27 @@ function App() {
 
   const loadDatabase = async () => {
     try {
-      const [invData, recData, aiData] = await Promise.all([
+      const promises = [
         fetchInventoryData().catch(() => []),
         fetchRecipeData().catch(() => []),
-        fetchInventoryPrediction().catch(() => ({ shopping_list: [] })),
-        fetchSalesHistory().catch(() => [])
-      ]);
-      setInventory(Array.isArray(invData) ? invData : []);
-      setRecipes(Array.isArray(recData) ? recData : []);
-      setAiPredictions(aiData?.shopping_list || []);
+      ];
+
+      // Only fetch predictions and sales if user is manager
+      if (userRole === 'manager') {
+        promises.push(
+          fetchInventoryPrediction().catch(() => ({ shopping_list: [] })),
+          fetchSalesHistory().catch(() => [])
+        );
+      }
+
+      const results = await Promise.all(promises);
+      
+      setInventory(Array.isArray(results[0]) ? results[0] : []);
+      setRecipes(Array.isArray(results[1]) ? results[1] : []);
+      
+      if (userRole === 'manager' && results[2]) {
+        setAiPredictions(results[2]?.shopping_list || []);
+      }
     } catch (error) {
       console.error("Critical Data Load Error:", error);
     } finally {
@@ -68,61 +83,140 @@ function App() {
     setInventory(Array.isArray(invData) ? invData : []);
   };
 
+  // Protected Route Component
+  const ProtectedRoute = ({ children, managerOnly = false }) => {
+    if (!isLoggedIn) {
+      return <Navigate to="/login" />;
+    }
+    
+    if (managerOnly && userRole !== 'manager') {
+      return <Navigate to="/pos" />; // Redirect waiters to POS
+    }
+    
+    return children;
+  };
+
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={!isLoggedIn ? <Login setIsLoggedIn={setIsLoggedIn} /> : <Navigate to="/" />} />
+        <Route 
+          path="/login" 
+          element={
+            !isLoggedIn ? 
+            <Login setIsLoggedIn={setIsLoggedIn} setUserRole={setUserRole} /> : 
+            <Navigate to={userRole === 'waiter' ? '/pos' : '/'} />
+          } 
+        />
+        
         <Route path="/*" element={
-          isLoggedIn ? (
-            <Layout setIsLoggedIn={setIsLoggedIn}>
+          <ProtectedRoute>
+            <Layout setIsLoggedIn={setIsLoggedIn} userRole={userRole}>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                {/* WAITER: Only POS access */}
+                <Route 
+                  path="/pos" 
+                  element={<POS />} 
+                />
 
-                {/* ✅ NEW: POS Route */}
-                <Route path="/pos" element={<POS />} />
+                {/* MANAGER: All routes below */}
+                <Route 
+                  path="/" 
+                  element={
+                    <ProtectedRoute managerOnly>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } 
+                />
 
-                <Route path="/sales-entry" element={<SalesEntry menuItems={recipes} />} />
-                <Route path="/inventory" element={<InventoryManagement />} />
+                <Route 
+                  path="/sales-entry" 
+                  element={
+                    <ProtectedRoute managerOnly>
+                      <SalesEntry menuItems={recipes} />
+                    </ProtectedRoute>
+                  } 
+                />
 
-                <Route path="/lead-times" element={
-                  <DataTableView
-                    title="Supplier Lead Times"
-                    description="Delivery estimates."
-                    columns={['Name', 'Lead Time']}
-                    data={inventory.map(i => ({ name: i.name, lead_time: `${i.lead_time || 1} Days` }))}
-                  />
-                } />
+                <Route 
+                  path="/inventory" 
+                  element={
+                    <ProtectedRoute managerOnly>
+                      <InventoryManagement />
+                    </ProtectedRoute>
+                  } 
+                />
 
-                <Route path="/mrp" element={
-                  <DataTableView
-                    title="Product Pricing (MRP)"
-                    description="Live cost analysis & margins."
-                    columns={['Item', 'Category', 'Selling Price', 'Making Cost', 'Margin']}
-                    data={recipes.map(r => {
-                      const makingCost = calculateRecipeCost(r, inventory);
-                      const sellingPrice = r.price || 0;
-                      const margin = sellingPrice - makingCost;
-                      return {
-                        item: r.item_name,
-                        category: r.category || 'General',
-                        selling_price: `$${sellingPrice.toFixed(2)}`,
-                        making_cost: `$${makingCost.toFixed(2)}`,
-                        margin: `$${margin.toFixed(2)}`
-                      };
-                    })}
-                  />
-                } />
+                <Route 
+                  path="/lead-times" 
+                  element={
+                    <ProtectedRoute managerOnly>
+                      <DataTableView
+                        title="Supplier Lead Times"
+                        description="Delivery estimates."
+                        columns={['Name', 'Lead Time']}
+                        data={inventory.map(i => ({ 
+                          name: i.name, 
+                          lead_time: `${i.lead_time || 1} Days` 
+                        }))}
+                      />
+                    </ProtectedRoute>
+                  } 
+                />
 
-                <Route path="/recipes" element={
-                  <RecipeManagement
-                    inventoryData={inventory}
-                    onRecipeUpdate={refreshRecipes}
-                  />
-                } />
-                <Route path="/orders" element={<OrderManagement />} />
+                <Route 
+                  path="/mrp" 
+                  element={
+                    <ProtectedRoute managerOnly>
+                      <DataTableView
+                        title="Product Pricing (MRP)"
+                        description="Live cost analysis & margins."
+                        columns={['Item', 'Category', 'Selling Price', 'Making Cost', 'Margin']}
+                        data={recipes.map(r => {
+                          const makingCost = calculateRecipeCost(r, inventory);
+                          const sellingPrice = r.price || 0;
+                          const margin = sellingPrice - makingCost;
+                          return {
+                            item: r.item_name,
+                            category: r.category || 'General',
+                            selling_price: `$${sellingPrice.toFixed(2)}`,
+                            making_cost: `$${makingCost.toFixed(2)}`,
+                            margin: `$${margin.toFixed(2)}`
+                          };
+                        })}
+                      />
+                    </ProtectedRoute>
+                  } 
+                />
+
+                <Route 
+                  path="/recipes" 
+                  element={
+                    <ProtectedRoute managerOnly>
+                      <RecipeManagement
+                        inventoryData={inventory}
+                        onRecipeUpdate={refreshRecipes}
+                      />
+                    </ProtectedRoute>
+                  } 
+                />
+
+                <Route 
+                  path="/orders" 
+                  element={
+                    <ProtectedRoute managerOnly>
+                      <OrderManagement />
+                    </ProtectedRoute>
+                  } 
+                />
+
+                {/* Redirect unknown routes */}
+                <Route 
+                  path="*" 
+                  element={<Navigate to={userRole === 'waiter' ? '/pos' : '/'} />} 
+                />
               </Routes>
             </Layout>
-          ) : <Navigate to="/login" />
+          </ProtectedRoute>
         } />
       </Routes>
     </Router>
