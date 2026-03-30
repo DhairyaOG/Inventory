@@ -79,7 +79,7 @@ router.delete('/recipes/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// SALES — FIX: accepts single object OR array
+// SALES
 router.post('/sales', async (req, res) => {
   try {
     const rawData = Array.isArray(req.body) ? req.body : [req.body];
@@ -183,10 +183,15 @@ router.post('/payments/verify', async (req, res) => {
 // AI PROXY
 router.get('/predict-orders', async (req, res) => {
   try {
-    const r = await axios.get('http://localhost:3900/predict-orders');
+    // Determine the base URL dynamically: use the environment variable if deployed, otherwise fallback to localhost
+    const mlApiUrl = process.env.ML_API_URL || 'http://localhost:3900';
+    
+    // Fetch predictions from the Python ML backend
+    const r = await axios.get(`${mlApiUrl}/predict-orders`);
     res.json(r.data);
   } catch (err) {
-    res.status(503).json({ message: "AI Brain offline. Run Python service on port 3900." });
+    console.error("AI Proxy Error:", err.message);
+    res.status(503).json({ message: "AI Brain offline. Make sure the ML service is running." });
   }
 });
 
