@@ -93,7 +93,7 @@ const InventoryManagement = () => {
                   <th className="p-4">Material Name</th>
                   <th className="p-4">Stock Qty</th>
                   <th className="p-4">Unit Type</th>
-                  <th className="p-4">Unit Price ($)</th>
+                  <th className="p-4">Unit Price (₹)</th>
                   <th className="p-4">Lead Time (Days)</th>
                   <th className="p-4">Shelf Life (Days)</th>
                   <th className="p-4 text-center">Actions</th>
@@ -167,7 +167,7 @@ const InventoryManagement = () => {
                           </span>
                         </td>
                         <td className="p-4 text-sage">{item.unit}</td>
-                        <td className="p-4 font-medium text-charcoal">${Number(item.unit_price || 0).toFixed(2)}</td>
+                        <td className="p-4 font-medium text-charcoal">₹{Number(item.unit_price || 0).toFixed(2)}</td>
                         <td className="p-4 text-sage">{item.lead_time} day(s)</td>
                         <td className="p-4 text-sage">{item.expiry_days || 7} day(s)</td>
                         <td className="p-4">

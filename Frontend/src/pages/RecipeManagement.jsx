@@ -168,10 +168,10 @@ const RecipeManagement = ({ inventoryData = [], onRecipeUpdate }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-sage mb-1 flex justify-between">
-                    Final Selling Price ($)
+                    Final Selling Price (₹)
                     {suggestedPrice > 0 && (
                       <span className="text-pantri-primary text-xs font-bold cursor-pointer hover:underline" onClick={() => setPrice(suggestedPrice.toFixed(2))}>
-                        Use Suggested: ${suggestedPrice.toFixed(2)}
+                        Use Suggested: ₹{suggestedPrice.toFixed(2)}
                       </span>
                     )}
                   </label>
@@ -188,8 +188,8 @@ const RecipeManagement = ({ inventoryData = [], onRecipeUpdate }) => {
 
               {makingCost > 0 && (
                 <div className="bg-pantri-bc/20 p-4 rounded-xl flex justify-between items-center text-sm border border-pantri-bc/50">
-                  <div className="text-charcoal"><span className="text-sage">Total Making Cost:</span> <strong>${makingCost.toFixed(2)}</strong></div>
-                  <div className="text-charcoal"><span className="text-sage">Projected Auto-Profit:</span> <strong>${(Number(price || 0) - makingCost).toFixed(2)}</strong>/unit</div>
+                  <div className="text-charcoal"><span className="text-sage">Total Making Cost:</span> <strong>₹{makingCost.toFixed(2)}</strong></div>
+                  <div className="text-charcoal"><span className="text-sage">Projected Auto-Profit:</span> <strong>₹{(Number(price || 0) - makingCost).toFixed(2)}</strong>/unit</div>
                 </div>
               )}
 
@@ -263,7 +263,7 @@ const RecipeManagement = ({ inventoryData = [], onRecipeUpdate }) => {
                     <tr key={recipe._id} className="border-b border-pantri-bc/50 hover:bg-pantri-bg/30 transition-colors">
                       <td className="p-4 font-bold text-charcoal">{recipe.item_name}</td>
                       <td className="p-4 text-sm text-sage">{recipe.category}</td>
-                      <td className="p-4 text-sm text-charcoal font-medium">${recipe.price.toFixed(2)}</td>
+                      <td className="p-4 text-sm text-charcoal font-medium">₹{recipe.price.toFixed(2)}</td>
                       <td className="p-4 text-sm text-sage text-xs">
                         {recipe.ingredients.map(i => `${i.qty}x ${i.name}`).join(', ')}
                       </td>

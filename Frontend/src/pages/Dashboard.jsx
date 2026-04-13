@@ -101,23 +101,23 @@ const Dashboard = () => {
         </div>
         <div className="text-right hidden md:block">
             <p className="text-xs text-sage uppercase font-bold">Current Net Profit</p>
-            <p className="text-3xl font-bold text-green-700">+${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <p className="text-3xl font-bold text-green-700">+₹{totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
         </div>
       </header>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-pantri-bc/30 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10"><h1 className="text-6xl font-bold text-pantri-primary">$</h1></div>
+              <div className="absolute top-0 right-0 p-4 opacity-10"><h1 className="text-6xl font-bold text-pantri-primary">₹</h1></div>
               <div className="text-sage text-xs font-bold uppercase tracking-wider mb-1">Total Revenue (30d)</div>
-              <div className="text-3xl font-bold text-charcoal">${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+              <div className="text-3xl font-bold text-charcoal">₹{totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
               <div className="text-green-600 text-xs mt-2 font-bold flex items-center">↑ Gross Sales Collected</div>
           </div>
           
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-pantri-bc/30 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-10"><h1 className="text-6xl font-bold text-green-700">%</h1></div>
               <div className="text-sage text-xs font-bold uppercase tracking-wider mb-1">Net Profit (30d)</div>
-              <div className="text-3xl font-bold text-green-700">${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+              <div className="text-3xl font-bold text-green-700">₹{totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
               <div className="text-sage text-xs mt-2">After food costs (COGS)</div>
           </div>
 
@@ -153,10 +153,10 @@ const Dashboard = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis dataKey="date" tick={{fill: '#8F9E82', fontSize: 12}} tickLine={false} axisLine={false} minTickGap={30} />
-                  <YAxis tick={{fill: '#8F9E82', fontSize: 12}} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                  <YAxis tick={{fill: '#8F9E82', fontSize: 12}} tickLine={false} axisLine={false} tickFormatter={(value) => `₹₹{value}`} />
                   <Tooltip 
                     contentStyle={{backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    formatter={(value, name) => [`$${Number(value).toFixed(2)}`, name === 'profit' ? 'Net Profit' : 'Gross Revenue']}
+                    formatter={(value, name) => [`₹₹{Number(value).toFixed(2)}`, name === 'profit' ? 'Net Profit' : 'Gross Revenue']}
                   />
                   <Area type="monotone" dataKey="revenue" stroke="#C89F87" fill="transparent" strokeWidth={2} />
                   <Area type="monotone" dataKey="profit" stroke="#15803d" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={3} />
@@ -201,10 +201,10 @@ const Dashboard = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e7ff" />
                   <XAxis dataKey="date" tick={{fill: '#6366f1', fontSize: 12}} tickLine={false} axisLine={false} minTickGap={30} />
-                  <YAxis tick={{fill: '#6366f1', fontSize: 12}} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                  <YAxis tick={{fill: '#6366f1', fontSize: 12}} tickLine={false} axisLine={false} tickFormatter={(value) => `₹₹{value}`} />
                   <Tooltip 
                     contentStyle={{backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #c7d2fe', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    formatter={(value, name) => [`$${Number(value).toFixed(2)}`, name === 'profit' ? 'AI Projected Profit' : 'AI Projected Revenue']}
+                    formatter={(value, name) => [`₹₹{Number(value).toFixed(2)}`, name === 'profit' ? 'AI Projected Profit' : 'AI Projected Revenue']}
                   />
                   <Area type="monotone" dataKey="revenue" stroke="#818cf8" strokeDasharray="5 5" fillOpacity={1} fill="url(#colorFutureRev)" strokeWidth={2} />
                   <Area type="monotone" dataKey="profit" stroke="#4f46e5" strokeDasharray="5 5" fillOpacity={1} fill="url(#colorFutureProfit)" strokeWidth={3} />

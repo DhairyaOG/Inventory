@@ -178,9 +178,9 @@ function App() {
                           return {
                             item: r.item_name,
                             category: r.category || 'General',
-                            selling_price: `$${sellingPrice.toFixed(2)}`,
-                            making_cost: `$${makingCost.toFixed(2)}`,
-                            margin: `$${margin.toFixed(2)}`
+                            selling_price: `₹${sellingPrice.toFixed(2)}`,
+                            making_cost: `₹${makingCost.toFixed(2)}`,
+                            margin: `₹${margin.toFixed(2)}`
                           };
                         })}
                       />
