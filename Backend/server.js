@@ -38,7 +38,11 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Node Server running on port ${PORT}`);
-  console.log(`🔐 JWT Authentication enabled`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Node Server running on port ${PORT}`);
+    console.log(`🔐 JWT Authentication enabled`);
+  });
+}
+
+module.exports = app;
