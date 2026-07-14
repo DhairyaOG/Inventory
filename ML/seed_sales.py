@@ -7,8 +7,10 @@ from urllib.parse import quote_plus
 
 import os
 from dotenv import load_dotenv
-load_dotenv()
-MONGO_URI = os.getenv("MONGO_URL") or "mongodb+srv://aroradhairya314:123@items.xws9ags.mongodb.net/?appName=Items"
+MONGO_URI = os.getenv("MONGO_URI")
+
+if not MONGO_URI:
+    raise ValueError("MONGO_URI environment variable not set. Please create a .env file with your database credentials.")
 
 client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client['restaurant_db']
