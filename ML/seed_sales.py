@@ -5,10 +5,10 @@ import certifi
 from datetime import datetime, timedelta
 from urllib.parse import quote_plus
 
-# 1. DATABASE CONNECTION
-username = quote_plus("aroradhairya314")
-password = quote_plus("@123#") 
-MONGO_URI = f"mongodb+srv://{username}:{password}@items.xws9ags.mongodb.net/?appName=Items"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+MONGO_URI = os.getenv("MONGO_URL") or "mongodb+srv://aroradhairya314:123@items.xws9ags.mongodb.net/?appName=Items"
 
 client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client['restaurant_db']

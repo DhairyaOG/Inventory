@@ -153,10 +153,10 @@ const Dashboard = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis dataKey="date" tick={{fill: '#8F9E82', fontSize: 12}} tickLine={false} axisLine={false} minTickGap={30} />
-                  <YAxis tick={{fill: '#8F9E82', fontSize: 12}} tickLine={false} axisLine={false} tickFormatter={(value) => `₹₹{value}`} />
+                  <YAxis tick={{fill: '#8F9E82', fontSize: 12}} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
                   <Tooltip 
                     contentStyle={{backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    formatter={(value, name) => [`₹₹{Number(value).toFixed(2)}`, name === 'profit' ? 'Net Profit' : 'Gross Revenue']}
+                    formatter={(value, name) => [`₹${Number(value).toFixed(2)}`, name === 'profit' ? 'Net Profit' : 'Gross Revenue']}
                   />
                   <Area type="monotone" dataKey="revenue" stroke="#C89F87" fill="transparent" strokeWidth={2} />
                   <Area type="monotone" dataKey="profit" stroke="#15803d" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={3} />
@@ -201,10 +201,10 @@ const Dashboard = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e0e7ff" />
                   <XAxis dataKey="date" tick={{fill: '#6366f1', fontSize: 12}} tickLine={false} axisLine={false} minTickGap={30} />
-                  <YAxis tick={{fill: '#6366f1', fontSize: 12}} tickLine={false} axisLine={false} tickFormatter={(value) => `₹₹{value}`} />
+                  <YAxis tick={{fill: '#6366f1', fontSize: 12}} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
                   <Tooltip 
                     contentStyle={{backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #c7d2fe', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                    formatter={(value, name) => [`₹₹{Number(value).toFixed(2)}`, name === 'profit' ? 'AI Projected Profit' : 'AI Projected Revenue']}
+                    formatter={(value, name) => [`₹${Number(value).toFixed(2)}`, name === 'profit' ? 'AI Projected Profit' : 'AI Projected Revenue']}
                   />
                   <Area type="monotone" dataKey="revenue" stroke="#818cf8" strokeDasharray="5 5" fillOpacity={1} fill="url(#colorFutureRev)" strokeWidth={2} />
                   <Area type="monotone" dataKey="profit" stroke="#4f46e5" strokeDasharray="5 5" fillOpacity={1} fill="url(#colorFutureProfit)" strokeWidth={3} />

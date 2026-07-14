@@ -144,6 +144,10 @@ export const fetchSalesHistory = async () => {
 
 export const fetchInventoryPrediction = async () => { 
   try { 
+    // Hit ML directly if URL is available to avoid Vercel 10s timeout on proxy
+    if (ML_API_URL) {
+      return (await axios.get(`${ML_API_URL}/predict-orders`)).data;
+    }
     return (await api.get('/predict-orders')).data; 
   } catch (err) { 
     console.error('Prediction error:', err);
