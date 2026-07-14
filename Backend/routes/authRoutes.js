@@ -14,9 +14,9 @@ const generateToken = (userId, role) => {
 };
 
 // @route   POST /api/auth/register
-// @desc    Register new user (Manager only)
-// @access  Private (Manager)
-router.post('/register', authenticateToken, requireManager, async (req, res) => {
+// @desc    Register new user
+// @access  Public
+router.post('/register', async (req, res) => {
   try {
     const { username, email, password, role, fullName } = req.body;
 

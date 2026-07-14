@@ -306,7 +306,7 @@ router.post('/payments/verify', authenticateToken, async (req, res) => {
 router.get('/predict-orders', authenticateToken, requireManager, async (req, res) => {
   try {
     const mlApiUrl = process.env.ML_API_URL || 'http://localhost:3900';
-    const r = await axios.get(`${mlApiUrl}/predict-orders`);
+    const r = await axios.get(`${mlApiUrl}/predict-orders`, { timeout: 5000 });
     res.json(r.data);
   } catch (err) {
     res.status(503).json({ 

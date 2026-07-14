@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import logoFull from '../assets/pantri-logo-full.png';
 import { login } from '../services/api';
 
@@ -82,6 +83,15 @@ const Login = ({ setIsLoggedIn, setUserRole }) => {
 
         <div className="mt-6 text-xs text-sage">
           <p>Manager: Full Access | Waiter: POS Only</p>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-pantri-bc/20">
+          <p className="text-sm text-sage">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-pantri-primary font-bold hover:underline">
+              Register here
+            </Link>
+          </p>
         </div>
       </div>
     </div>

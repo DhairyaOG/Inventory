@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import SalesEntry from './pages/SalesEntry';
 import DataTableView from './pages/DataTableView';
 import RecipeManagement from './pages/RecipeManagement';
@@ -104,6 +105,15 @@ function App() {
           element={
             !isLoggedIn ? 
             <Login setIsLoggedIn={setIsLoggedIn} setUserRole={setUserRole} /> : 
+            <Navigate to={userRole === 'waiter' ? '/pos' : '/'} />
+          } 
+        />
+        
+        <Route 
+          path="/register" 
+          element={
+            !isLoggedIn ? 
+            <Register setIsLoggedIn={setIsLoggedIn} setUserRole={setUserRole} /> : 
             <Navigate to={userRole === 'waiter' ? '/pos' : '/'} />
           } 
         />
