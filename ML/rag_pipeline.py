@@ -41,11 +41,26 @@ def get_vectorstore():
         model="models/gemini-embedding-2", 
         google_api_key=os.environ.get("GEMINI_API_KEY")
     )
-    return Chroma(
-        client=chroma_client,
-        collection_name="restaurant_data",
-        embedding_function=embedding_function,
-    )
+    
+    try:
+        return Chroma(
+            client=chroma_client,
+            collection_name="restaurant_data",
+            embedding_function=embedding_function,
+        )
+    except Exception as e:
+        if "dimension" in str(e).lower():
+            logger.warning("Dimension mismatch detected. Deleting old ChromaDB collection...")
+            try:
+                chroma_client.delete_collection("restaurant_data")
+            except Exception:
+                pass
+            return Chroma(
+                client=chroma_client,
+                collection_name="restaurant_data",
+                embedding_function=embedding_function,
+            )
+        raise e
 
 def sync_data():
     """Fetches MongoDB data and updates ChromaDB"""
@@ -79,16 +94,15 @@ def sync_data():
         logger.warning("No data found to sync.")
         return False
         
+    # Fetch the client directly to delete
+    chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+    try:
+        chroma_client.delete_collection("restaurant_data")
+    except Exception:
+        pass
+        
     vectorstore = get_vectorstore()
-    
-    # Simple strategy: clear the collection and rebuild it (since our data isn't huge)
-    chroma_client.delete_collection("restaurant_data")
-    vectorstore = Chroma.from_documents(
-        documents=docs, 
-        embedding=embedding_function, 
-        collection_name="restaurant_data",
-        client=chroma_client
-    )
+    vectorstore.add_documents(docs)
     
     logger.info(f"✅ Synced {len(docs)} documents to ChromaDB.")
     return True
