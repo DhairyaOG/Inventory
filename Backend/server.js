@@ -9,8 +9,11 @@ dotenv.config();
 // 2. Initialize the Express app
 const app = express();
 
-// 3. Connect to Database
-connectDB();
+// 3. Connect to Database (Middleware for Serverless)
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 // 4. Configure and apply CORS
 const corsOptions = {
