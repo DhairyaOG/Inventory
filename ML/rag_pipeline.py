@@ -96,6 +96,13 @@ def sync_data():
         text = f"Sales Record for {item_name}: We have sold a lifetime total of {total} units. Recent daily sales: {history_str}."
         docs.append(Document(page_content=text, metadata={"source": "sales", "item": str(item_name)}))
 
+    # 3. Fetch Recipes (Menu Items, Prices, Ingredients)
+    recipes = db.recipes.find()
+    for recipe in recipes:
+        ingredients_list = ", ".join([f"{ing['qty']} of {ing['name']}" for ing in recipe.get('ingredients', [])])
+        text = f"Menu Item (Recipe): {recipe.get('item_name')}. Category: {recipe.get('category')}. Selling Price: ${recipe.get('price')}. Cost to make: ${recipe.get('cost')}. Ingredients required: {ingredients_list}."
+        docs.append(Document(page_content=text, metadata={"source": "recipe", "item": recipe.get("item_name")}))
+
     if not docs:
         logger.warning("No data found to sync.")
         return False
