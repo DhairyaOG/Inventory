@@ -74,21 +74,27 @@ def sync_data():
         text = f"Inventory Item: {item.get('name')}. We currently have {item.get('stock')} {item.get('unit', 'units')} in stock. The lead time to order more is {item.get('lead_time')} days."
         docs.append(Document(page_content=text, metadata={"source": "inventory", "item": item.get("name")}))
         
-    # 2. Fetch Recent Sales (last 30 days)
-    # To avoid blowing up Chroma, we aggregate or just pull recent.
-    # We will summarize daily sales per item
+    # 2. Fetch Recent Sales (Grouped by Item to reduce embedding count)
+    # This prevents hitting the 100 requests/minute Gemini API rate limit.
     pipeline = [
-        {"$group": {"_id": {"date": "$date", "item": "$item_name"}, "total_sold": {"$sum": "$qty_sold"}}},
-        {"$sort": {"_id.date": -1}},
-        {"$limit": 500}
+        {"$group": {
+            "_id": "$item_name", 
+            "total_sold_ever": {"$sum": "$qty_sold"},
+            "sales_history": {"$push": {"date": "$date", "qty": "$qty_sold"}}
+        }},
+        {"$limit": 100}
     ]
     sales = db.sales.aggregate(pipeline)
     for sale in sales:
-        date = sale['_id']['date']
-        item_name = sale['_id']['item']
-        qty = sale['total_sold']
-        text = f"Sales Record: On {date}, we sold a total of {qty} {item_name}s."
-        docs.append(Document(page_content=text, metadata={"source": "sales", "date": str(date), "item": str(item_name)}))
+        item_name = sale['_id']
+        total = sale['total_sold_ever']
+        
+        # Sort history and keep only recent 30 to avoid exceeding token limits
+        history = sorted(sale['sales_history'], key=lambda x: x['date'], reverse=True)[:30]
+        history_str = ", ".join([f"{h['date']}: {h['qty']}" for h in history])
+        
+        text = f"Sales Record for {item_name}: We have sold a lifetime total of {total} units. Recent daily sales: {history_str}."
+        docs.append(Document(page_content=text, metadata={"source": "sales", "item": str(item_name)}))
 
     if not docs:
         logger.warning("No data found to sync.")
