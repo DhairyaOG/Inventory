@@ -38,7 +38,7 @@ CHROMA_PATH = os.path.join(os.path.dirname(__file__), "chroma_db")
 def get_vectorstore():
     chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
     embedding_function = GoogleGenerativeAIEmbeddings(
-        model="models/text-embedding-004", 
+        model="models/gemini-embedding-2", 
         google_api_key=os.environ.get("GEMINI_API_KEY")
     )
     return Chroma(
