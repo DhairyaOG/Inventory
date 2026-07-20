@@ -124,13 +124,13 @@ function App() {
               <Routes>
                 {/* WAITER: Only POS access */}
                 <Route 
-                  path="/pos" 
+                  path="pos" 
                   element={<POS />} 
                 />
 
                 {/* MANAGER: All routes below */}
                 <Route 
-                  path="/" 
+                  path="" 
                   element={
                     <ProtectedRoute managerOnly>
                       <Dashboard />
@@ -139,7 +139,7 @@ function App() {
                 />
 
                 <Route 
-                  path="/sales-entry" 
+                  path="sales-entry" 
                   element={
                     <ProtectedRoute managerOnly>
                       <SalesEntry menuItems={recipes} />
@@ -148,7 +148,7 @@ function App() {
                 />
 
                 <Route 
-                  path="/inventory" 
+                  path="inventory" 
                   element={
                     <ProtectedRoute managerOnly>
                       <InventoryManagement />
@@ -157,7 +157,7 @@ function App() {
                 />
 
                 <Route 
-                  path="/lead-times" 
+                  path="lead-times" 
                   element={
                     <ProtectedRoute managerOnly>
                       <DataTableView
@@ -174,7 +174,7 @@ function App() {
                 />
 
                 <Route 
-                  path="/mrp" 
+                  path="mrp" 
                   element={
                     <ProtectedRoute managerOnly>
                       <DataTableView
@@ -199,7 +199,7 @@ function App() {
                 />
 
                 <Route 
-                  path="/recipes" 
+                  path="recipes" 
                   element={
                     <ProtectedRoute managerOnly>
                       <RecipeManagement
@@ -211,7 +211,7 @@ function App() {
                 />
 
                 <Route 
-                  path="/orders" 
+                  path="orders" 
                   element={
                     <ProtectedRoute managerOnly>
                       <OrderManagement />
