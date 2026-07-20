@@ -5,13 +5,12 @@ load_dotenv()
 from pymongo import MongoClient
 import certifi
 import chromadb
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
 from urllib.parse import quote_plus
-from langchain_community.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from langchain_community.vectorstores import Chroma
 
 logger = logging.getLogger(__name__)
@@ -36,7 +35,8 @@ db = client['restaurant_db']
 # ChromaDB Setup
 CHROMA_PATH = os.path.join(os.path.dirname(__file__), "chroma_db")
 chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
-embedding_function = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+# Setup Google Embeddings (Requires no RAM unlike local PyTorch models)
+embedding_function = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=os.environ.get("GEMINI_API_KEY"))
 
 def get_vectorstore():
     return Chroma(
