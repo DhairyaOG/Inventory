@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from functools import wraps
+import rag_pipeline
 
 # ─────────────────────────────────────────────
 # 0. LOGGING SETUP
@@ -174,7 +175,9 @@ def home():
         "endpoints": {
             "health": "/health",
             "train": "/train (POST, requires X-API-Key header)",
-            "predict": "/predict-orders (GET)"
+            "predict": "/predict-orders (GET)",
+            "sync_db": "/sync-db (POST, requires X-API-Key header)",
+            "ask": "/ask (POST)"
         }
     })
 
@@ -306,6 +309,36 @@ def predict_orders():
         "shopping_list": todays_orders,
         "total_items_to_order": len(todays_orders)
     })
+
+# ─────────────────────────────────────────────
+# 9. RAG PIPELINE ROUTES
+# ─────────────────────────────────────────────
+
+@app.route("/sync-db", methods=["POST"])
+@require_api_key
+def sync_chroma_db():
+    """Sync MongoDB data to ChromaDB for RAG."""
+    success = rag_pipeline.sync_data()
+    if success:
+        return jsonify({"status": "success", "message": "Synced data to ChromaDB"})
+    return jsonify({"error": "Failed to sync data"}), 500
+
+@app.route("/ask", methods=["POST"])
+def ask_ai():
+    """Chat with the RAG pipeline."""
+    data = request.json
+    if not data or "question" not in data:
+        return jsonify({"error": "Missing 'question' in request body"}), 400
+        
+    question = data["question"]
+    # Usually we pass Gemini API key from the frontend or have it in the server's .env
+    gemini_key = data.get("api_key") or os.getenv("GEMINI_API_KEY")
+    
+    if not gemini_key:
+        return jsonify({"error": "Missing Gemini API Key in request or server environment"}), 401
+        
+    answer = rag_pipeline.ask_question(question, gemini_key)
+    return jsonify({"answer": answer})
 
 
 # ─────────────────────────────────────────────

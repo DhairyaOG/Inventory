@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { fetchSalesHistory, fetchInventoryPrediction, fetchRecipeData, fetchInventoryData } from '../services/api';
+import { fetchSalesHistory, fetchInventoryPrediction, fetchRecipeData, fetchInventoryData, triggerTraining } from '../services/api';
+import ChatWidget from '../components/ChatWidget';
 
 const calculateRecipeCost = (recipeName, recipes, inventoryList) => {
   const recipe = recipes.find(r => r.item_name === recipeName);
@@ -28,6 +29,23 @@ const Dashboard = () => {
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalProfit, setTotalProfit] = useState(0);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+  const [isRetraining, setIsRetraining] = useState(false);
+
+  const handleRetrain = async () => {
+    const apiKey = window.prompt("Enter API Secret Key to retrain models:");
+    if (!apiKey) return;
+
+    setIsRetraining(true);
+    try {
+      const result = await triggerTraining(apiKey);
+      alert(`✅ AI Models retrained successfully!\n\nTrained items: ${result.trained_items?.join(', ')}`);
+      await loadDashboardData(); // Refresh the chart with the newly trained data
+    } catch (err) {
+      alert(`❌ Training failed: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setIsRetraining(false);
+    }
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -180,6 +198,13 @@ const Dashboard = () => {
             <div className="flex gap-4 text-sm">
                 <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-indigo-300"></div> Projected Net Profit</div>
                 <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-indigo-100"></div> Projected Revenue</div>
+                <button 
+                  onClick={handleRetrain}
+                  disabled={isRetraining}
+                  className="ml-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isRetraining ? 'Training...' : '🧠 Retrain AI'}
+                </button>
             </div>
           </div>
           
@@ -219,6 +244,8 @@ const Dashboard = () => {
           </div>
       </div>
 
+      {/* Chat Widget */}
+      <ChatWidget />
     </div>
   );
 };

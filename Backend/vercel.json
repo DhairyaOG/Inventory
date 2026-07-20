@@ -5,5 +5,11 @@
       "source": "/(.*)",
       "destination": "/Backend/server.js"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/train",
+      "schedule": "0 5 * * *"
+    }
   ]
 }

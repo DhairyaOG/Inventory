@@ -315,4 +315,29 @@ router.get('/predict-orders', authenticateToken, requireManager, async (req, res
   }
 });
 
+// ============================================================
+// CRON ROUTE - Automated ML Training
+// ============================================================
+router.get('/cron/train', async (req, res) => {
+  // Secure route for Vercel Cron Jobs
+  if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const mlApiUrl = process.env.ML_API_URL || 'http://localhost:3900';
+    const apiKey = process.env.API_SECRET_KEY || 'change-me-in-production';
+    
+    // Fire and forget to avoid Vercel 10s timeout limits!
+    axios.post(`${mlApiUrl}/train`, {}, {
+      headers: { 'X-API-Key': apiKey }
+    }).then(() => console.log("Cron ML Train Success!"))
+      .catch(err => console.error("Cron ML Train Error:", err.message));
+    
+    res.json({ message: "ML training triggered asynchronously" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

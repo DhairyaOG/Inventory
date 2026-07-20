@@ -166,6 +166,24 @@ export const triggerTraining = async (apiKey) => {
   }
 };
 
+export const syncDb = async (apiKey) => {
+  try {
+    return (await axios.post(`${ML_API_URL}/sync-db`, {}, {
+      headers: { 'X-API-Key': apiKey }
+    })).data;
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const askAI = async (question, apiKey) => {
+  try {
+    return (await axios.post(`${ML_API_URL}/ask`, { question, api_key: apiKey })).data;
+  } catch (err) {
+    throw err;
+  }
+};
+
 // ============================================================
 // RAZORPAY
 // ============================================================
