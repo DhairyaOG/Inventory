@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { askAI } from '../services/api';
+import { askAI, syncDb } from '../services/api';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,6 +9,7 @@ const ChatWidget = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const syncPromiseRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -17,6 +18,18 @@ const ChatWidget = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleOpenChat = () => {
+    setIsOpen(true);
+    // Fire off sync in the background so it's ready (or almost ready) when they ask a question.
+    if (!syncPromiseRef.current) {
+      const apiKey = import.meta.env.VITE_API_SECRET_KEY || 'abc';
+      syncPromiseRef.current = syncDb(apiKey).catch(err => {
+        console.error('Background sync failed:', err);
+        syncPromiseRef.current = null; // Reset so we don't block
+      });
+    }
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -28,9 +41,20 @@ const ChatWidget = () => {
     setIsLoading(true);
 
     try {
+      if (syncPromiseRef.current) {
+        // Remove typing indicator if we're going to show a sync message
+        setMessages(prev => [...prev, { text: "⏳ Syncing latest database before answering...", isBot: true, isTemp: true }]);
+        await syncPromiseRef.current;
+        syncPromiseRef.current = null; // Clear it so subsequent questions don't wait
+        
+        // Remove the temp syncing message
+        setMessages(prev => prev.filter(m => !m.isTemp));
+      }
+
       const response = await askAI(userMessage);
       setMessages(prev => [...prev, { text: response.answer, isBot: true }]);
     } catch (err) {
+      setMessages(prev => prev.filter(m => !m.isTemp));
       setMessages(prev => [...prev, { text: `Error: ${err.response?.data?.error || err.message}`, isBot: true, isError: true }]);
     } finally {
       setIsLoading(false);
@@ -106,10 +130,11 @@ const ChatWidget = () => {
             </form>
           </div>
         </div>
-      ) : (
-        <button 
-          onClick={() => setIsOpen(true)}
-          className="w-14 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform duration-300"
+      ) : null}
+      {!isOpen && (
+        <button
+          onClick={handleOpenChat}
+          className="bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
         >
           <span className="text-2xl">✨</span>
         </button>
