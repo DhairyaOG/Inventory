@@ -68,8 +68,8 @@ def sync_data():
     
     docs = []
     
-    # 1. Fetch Inventory
-    inventory = db.inventory.find()
+    # 1. Fetch Inventory (Collection name is 'ingredients' in MongoDB)
+    inventory = db.ingredients.find()
     for item in inventory:
         text = f"Inventory Item: {item.get('name')}. We currently have {item.get('stock')} {item.get('unit', 'units')} in stock. The lead time to order more is {item.get('lead_time')} days."
         docs.append(Document(page_content=text, metadata={"source": "inventory", "item": item.get("name")}))
@@ -103,6 +103,12 @@ def sync_data():
         text = f"Menu Item (Recipe): {recipe.get('item_name')}. Category: {recipe.get('category')}. Selling Price: ${recipe.get('price')}. Cost to make: ${recipe.get('cost')}. Ingredients required: {ingredients_list}."
         docs.append(Document(page_content=text, metadata={"source": "recipe", "item": recipe.get("item_name")}))
 
+    # 4. Fetch Staff (Users)
+    users = db.users.find()
+    for user in users:
+        text = f"Staff Member: {user.get('username')}. Role: {user.get('role')}."
+        docs.append(Document(page_content=text, metadata={"source": "staff", "user": user.get("username")}))
+
     if not docs:
         logger.warning("No data found to sync.")
         return False
@@ -135,15 +141,19 @@ def ask_question(query, gemini_api_key):
     retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
     
     prompt_template = """
-    You are Pantri AI, a helpful restaurant management assistant. 
-    Use the following pieces of retrieved context from the restaurant's database to answer the manager's question. 
-    If you don't know the answer based on the context, just say that you don't have that data in the database.
-    Keep the answer concise, professional, and directly address the manager's concern.
-
+    You are Pantri AI, a highly capable restaurant management assistant. 
+    Below is some retrieved context from the restaurant's live database containing inventory, sales, recipes, and staff info.
+    
     Context:
     {context}
 
     Question: {question}
+    
+    Instructions:
+    1. If the user asks about the restaurant's data (sales, prices, inventory, staff, etc.), use the Context to answer accurately. 
+    2. If the user asks a general question or just says hello, answer them directly using your general knowledge and conversational skills. Do NOT say "I don't have that data in the database" for general questions.
+    3. Keep your answers concise, helpful, and professional.
+    
     Answer:
     """
     PROMPT = PromptTemplate.from_template(prompt_template)
