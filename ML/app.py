@@ -37,13 +37,16 @@ API_SECRET_KEY = os.getenv("API_SECRET_KEY", "change-me-in-production")  # For /
 ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "*")  # Set to your frontend URL in production
 MODEL_PATH     = os.getenv("MODEL_PATH", "multi_item_model.pkl")
 
-if not MONGO_USERNAME or not MONGO_PASSWORD:
-    raise EnvironmentError("❌ MONGO_USERNAME and MONGO_PASSWORD must be set in .env")
+if MONGO_USERNAME and MONGO_PASSWORD:
+    MONGO_URL = (
+        f"mongodb+srv://{quote_plus(MONGO_USERNAME)}:{quote_plus(MONGO_PASSWORD)}"
+        f"@{MONGO_CLUSTER}/?appName={MONGO_APP_NAME}"
+    )
+else:
+    MONGO_URL = os.getenv("MONGO_URI")
 
-MONGO_URL = (
-    f"mongodb+srv://{quote_plus(MONGO_USERNAME)}:{quote_plus(MONGO_PASSWORD)}"
-    f"@{MONGO_CLUSTER}/?appName={MONGO_APP_NAME}"
-)
+if not MONGO_URL:
+    raise EnvironmentError("❌ MONGO_URI or (MONGO_USERNAME and MONGO_PASSWORD) must be set")
 
 # ─────────────────────────────────────────────
 # 2. FLASK APP SETUP

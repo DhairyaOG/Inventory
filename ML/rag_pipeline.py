@@ -34,11 +34,13 @@ db = client['restaurant_db']
 
 # ChromaDB Setup
 CHROMA_PATH = os.path.join(os.path.dirname(__file__), "chroma_db")
-chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
-# Setup Google Embeddings (Requires no RAM unlike local PyTorch models)
-embedding_function = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=os.environ.get("GEMINI_API_KEY"))
 
 def get_vectorstore():
+    chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+    embedding_function = GoogleGenerativeAIEmbeddings(
+        model="models/text-embedding-004", 
+        google_api_key=os.environ.get("GEMINI_API_KEY")
+    )
     return Chroma(
         client=chroma_client,
         collection_name="restaurant_data",
